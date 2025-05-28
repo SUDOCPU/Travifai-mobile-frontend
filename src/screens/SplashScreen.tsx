@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import {useEffect} from 'react';
 import {useNavigation} from '@react-navigation/native';
-import {getSession} from '../utils/session';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {StackNavigationProp} from '@react-navigation/stack';
 
 const window = Dimensions.get('window');
@@ -36,29 +36,44 @@ const SplashScreen = () => {
   const navigation = useNavigation<SplashScreenNavigationProp>();
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      navigation.navigate('HomeScreen');
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, [navigation]);
-
-  useEffect(() => {
     const checkSession = async () => {
-      const {userType, isLoggedIn} = await getSession();
-      if (isLoggedIn && userType === 'hotelier') {
-        navigation.replace('HotelierDashboard');
-      } else if (userType) {
-        navigation.replace('AuthScreen');
-      } else {
-        navigation.replace('HomeScreen');
+      try {
+        const role = await AsyncStorage.getItem('role');
+        const token = await AsyncStorage.getItem('token');
+        const hasSeenIntro = await AsyncStorage.getItem('hasSeenIntro');
+
+        setTimeout(() => {
+          if (!role) {
+            navigation.navigate('HomeScreen');
+          } else if (token) {
+            switch (role) {
+              case 'Hotelier':
+                navigation.navigate('HotelierDashboard');
+                break;
+              case 'Traveler':
+                navigation.navigate('TravellerDashboard' as never);
+                break;
+              case 'Travel Agency':
+                navigation.navigate('TravelAgencyDashboard' as never);
+                break;
+              case 'Taxi Driver':
+                navigation.navigate('TaxiDashboard' as never);
+                break;
+            }
+          } else {
+            if (role === 'Hotelier' && hasSeenIntro !== 'true') {
+              navigation.navigate('InfoCarousel' as never);
+            } else {
+              navigation.navigate('AuthScreen');
+            }
+          }
+        }, 2000);
+      } catch (error) {
+        console.error(`Error ${error}`);
       }
     };
 
-    const timer = setTimeout(() => {
-      checkSession();
-    }, 2000);
-
-    return () => clearTimeout(timer);
+    checkSession();
   }, [navigation]);
 
   return (
@@ -98,11 +113,12 @@ const styles = StyleSheet.create({
   },
   topContent: {
     alignItems: 'center',
-    marginTop: '20%',
+    marginTop: '22%',
   },
   headingText: {
+    fontFamily: 'Quicksand',
     fontSize: 36,
-    fontWeight: 'bold',
+    // fontWeight: 600,
     color: '#fff',
     marginBottom: 10,
   },

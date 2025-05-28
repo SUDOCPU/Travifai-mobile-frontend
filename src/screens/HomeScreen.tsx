@@ -44,23 +44,38 @@ const HomeScreen = () => {
 
   useEffect(() => {
     const checkLoginStatus = async () => {
-      const token = await AsyncStorage.getItem('token');
-      const userRole = await AsyncStorage.getItem('role');
+      try {
+        const token = await AsyncStorage.getItem('token');
+        const userRole = await AsyncStorage.getItem('role');
 
-      if (token && userRole) {
-        if (userRole === 'Hotelier') {
-          navigation.navigate('HotelierDashboard');
-        } else {
-          navigation.navigate('AuthScreen');
+        console.log(token, userRole);
+        console.log(AsyncStorage);
+        if (token && userRole) {
+          if (userRole === 'Hotelier') {
+            navigation.navigate('HotelierDashboard' as never);
+          } else {
+            navigation.navigate('AuthScreen' as never);
+          }
         }
+      } catch (error) {
+        console.error(`Error accessing storage ${error}`);
       }
     };
     checkLoginStatus();
   });
 
   const handleSelect = async (role: string, screen: string) => {
-    await AsyncStorage.setItem('role', role);
-    navigation.navigate(screen as never); // Use replace to prevent going back to home
+    try {
+      await AsyncStorage.setItem('role', role);
+
+      if (role === 'Hotelier') {
+        navigation.navigate('InfoCarousel' as never);
+      } else {
+        navigation.navigate('AuthScreen' as never);
+      }
+    } catch (error) {
+      console.error(`Error accessing local storage ${error}`);
+    }
   };
 
   const backgroundImage = isDark
