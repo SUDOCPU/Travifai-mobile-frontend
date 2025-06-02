@@ -1,15 +1,17 @@
+// src/screens/home/HomeScreen.tsx
+import React, {useEffect} from 'react';
 import {
   StyleSheet,
   Text,
   View,
   TouchableOpacity,
+  Image,
   useColorScheme,
   Dimensions,
-  Image,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, {useEffect} from 'react';
+import {getSession} from '../utils/session';
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window');
 
@@ -17,64 +19,61 @@ const roles = [
   {
     label: 'Traveler',
     image: require('../assets/Images/TravellerIcon.png'),
-    screen: 'AuthScreen',
   },
-
   {
     label: 'Travel Agency',
     image: require('../assets/Images/TravelAgencyIcon.png'),
-    screen: 'AuthScreen',
   },
-
   {
     label: 'Hotelier',
     image: require('../assets/Images/Hotel_Icon.png'),
-    screen: 'HotelierDashboard',
   },
-
   {
     label: 'Taxi Driver',
     image: require('../assets/Images/TaxiIcon.png'),
-    screen: 'AuthScreen',
   },
 ];
+
 const HomeScreen = () => {
   const isDark = useColorScheme() === 'dark';
   const navigation = useNavigation();
 
   useEffect(() => {
-    const checkLoginStatus = async () => {
-      try {
-        const token = await AsyncStorage.getItem('token');
-        const userRole = await AsyncStorage.getItem('role');
-
-        console.log(token, userRole);
-        console.log(AsyncStorage);
-        if (token && userRole) {
-          if (userRole === 'Hotelier') {
+    const redirectIfLoggedIn = async () => {
+      const {token, role} = await getSession();
+      if (token && role) {
+        switch (role) {
+          case 'Hotelier':
             navigation.navigate('HotelierDashboard' as never);
-          } else {
-            navigation.navigate('AuthScreen' as never);
-          }
+            break;
+          case 'Traveler':
+            navigation.navigate('TravellerDashboard' as never);
+            break;
+          case 'Travel Agency':
+            navigation.navigate('TravelAgencyDashboard' as never);
+            break;
+          case 'Taxi Driver':
+            navigation.navigate('TaxiDashboard' as never);
+            break;
+          default:
+            break;
         }
-      } catch (error) {
-        console.error(`Error accessing storage ${error}`);
       }
     };
-    checkLoginStatus();
-  });
 
-  const handleSelect = async (role: string, screen: string) => {
+    redirectIfLoggedIn();
+  }, [navigation]);
+
+  const handleSelect = async (role: string) => {
     try {
       await AsyncStorage.setItem('role', role);
-
       if (role === 'Hotelier') {
-        navigation.navigate('InfoCarousel' as never);
+        navigation.navigate('AuthScreen' as never);
       } else {
         navigation.navigate('AuthScreen' as never);
       }
     } catch (error) {
-      console.error(`Error accessing local storage ${error}`);
+      console.error('Error saving role:', error);
     }
   };
 
@@ -96,7 +95,7 @@ const HomeScreen = () => {
             <TouchableOpacity
               key={index}
               style={styles.roleCard}
-              onPress={() => handleSelect(role.label, role.screen)}>
+              onPress={() => handleSelect(role.label)}>
               <Image source={role.image} style={styles.roleImage} />
               <Text style={styles.roleLabel}>{role.label}</Text>
             </TouchableOpacity>
@@ -110,9 +109,7 @@ const HomeScreen = () => {
 const CARD_SIZE = SCREEN_WIDTH / 2.4;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: {flex: 1},
   backgroundImage: {
     width: SCREEN_WIDTH,
     height: SCREEN_HEIGHT,
@@ -130,9 +127,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     fontWeight: '400',
   },
-  bold: {
-    fontWeight: 'bold',
-  },
+  bold: {fontWeight: 'bold'},
   subheading: {
     fontSize: 18,
     color: '#fff',

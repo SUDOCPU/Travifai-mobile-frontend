@@ -1,4 +1,5 @@
-import React from 'react';
+// src/screens/splashscreen/SplashScreen.tsx
+import React, {useEffect} from 'react';
 import {
   View,
   Text,
@@ -8,10 +9,9 @@ import {
   Dimensions,
   TouchableOpacity,
 } from 'react-native';
-import {useEffect} from 'react';
 import {useNavigation} from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {StackNavigationProp} from '@react-navigation/stack';
+import {getSession} from '../utils/session';
+import type {StackNavigationProp} from '@react-navigation/stack';
 
 const window = Dimensions.get('window');
 const SCREEN_WIDTH = window.width;
@@ -21,7 +21,11 @@ type RootStackParamList = {
   SplashScreen: undefined;
   HomeScreen: undefined;
   AuthScreen: undefined;
+  InfoCarousel: undefined;
   HotelierDashboard: undefined;
+  TravellerDashboard: undefined;
+  TravelAgencyDashboard: undefined;
+  TaxiDashboard: undefined;
 };
 
 type SplashScreenNavigationProp = StackNavigationProp<
@@ -30,50 +34,43 @@ type SplashScreenNavigationProp = StackNavigationProp<
 >;
 
 const SplashScreen = () => {
-  const colorScheme = useColorScheme();
-
-  const isDark = colorScheme === 'dark';
   const navigation = useNavigation<SplashScreenNavigationProp>();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const role = await AsyncStorage.getItem('role');
-        const token = await AsyncStorage.getItem('token');
-        const hasSeenIntro = await AsyncStorage.getItem('hasSeenIntro');
+    const initializeApp = async () => {
+      const {token, role, hasSeenIntro} = await getSession();
 
-        setTimeout(() => {
-          if (!role) {
-            navigation.navigate('HomeScreen');
-          } else if (token) {
-            switch (role) {
-              case 'Hotelier':
-                navigation.navigate('HotelierDashboard');
-                break;
-              case 'Traveler':
-                navigation.navigate('TravellerDashboard' as never);
-                break;
-              case 'Travel Agency':
-                navigation.navigate('TravelAgencyDashboard' as never);
-                break;
-              case 'Taxi Driver':
-                navigation.navigate('TaxiDashboard' as never);
-                break;
-            }
-          } else {
-            if (role === 'Hotelier' && hasSeenIntro !== 'true') {
-              navigation.navigate('InfoCarousel' as never);
-            } else {
-              navigation.navigate('AuthScreen');
-            }
+      setTimeout(() => {
+        if (!role) {
+          navigation.replace('HomeScreen');
+        } else if (token) {
+          switch (role) {
+            case 'Hotelier':
+              navigation.replace('HotelierDashboard');
+              break;
+            case 'Traveler':
+              navigation.replace('TravellerDashboard');
+              break;
+            case 'Travel Agency':
+              navigation.replace('TravelAgencyDashboard');
+              break;
+            case 'Taxi Driver':
+              navigation.replace('TaxiDashboard');
+              break;
           }
-        }, 2000);
-      } catch (error) {
-        console.error(`Error ${error}`);
-      }
+        } else {
+          if (role === 'Hotelier' && hasSeenIntro !== 'true') {
+            navigation.replace('InfoCarousel');
+          } else {
+            navigation.replace('AuthScreen');
+          }
+        }
+      }, 1500);
     };
 
-    checkSession();
+    initializeApp();
   }, [navigation]);
 
   return (
@@ -98,9 +95,11 @@ const SplashScreen = () => {
         source={require('../assets/Images/welcomebg.png')}
         style={styles.busImage}
       />
+
       <TouchableOpacity
+        testID="forceSkip"
         style={styles.arrowContainer}
-        onPress={() => navigation.navigate('HomeScreen')}>
+        onPress={() => navigation.replace('HomeScreen')}>
         <Text style={styles.arrow}>{'>>'}</Text>
       </TouchableOpacity>
     </View>
@@ -108,19 +107,16 @@ const SplashScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    height: '100%',
-  },
+  container: {flex: 1},
   topContent: {
     alignItems: 'center',
     marginTop: '22%',
   },
   headingText: {
-    fontFamily: 'Quicksand',
     fontSize: 36,
-    // fontWeight: 600,
     color: '#fff',
     marginBottom: 10,
+    fontWeight: '700',
   },
   subText: {
     fontSize: 16,
@@ -136,7 +132,6 @@ const styles = StyleSheet.create({
     width: SCREEN_WIDTH,
     height: SCREEN_HEIGHT * 0.68,
   },
-
   arrowContainer: {
     position: 'absolute',
     bottom: 30,

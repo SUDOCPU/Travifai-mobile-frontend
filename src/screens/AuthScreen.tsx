@@ -16,6 +16,10 @@ import React, {useRef, useState} from 'react';
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window');
 
+import {signup, login, sendOtp, verifyOtp} from '../utils/mockAPI';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useNavigation} from '@react-navigation/native';
+
 const AuthScreen = () => {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [step, setStep] = useState<'auth' | 'otp'>('auth');
@@ -24,13 +28,60 @@ const AuthScreen = () => {
   const otpInputs = [useRef(null), useRef(null), useRef(null), useRef(null)];
   const isDark = useColorScheme() === 'dark';
 
+  const navigation = useNavigation();
+
   const backgroundImage = isDark
     ? require('../assets/Images/BgImageDarkMode.png')
     : require('../assets/Images/BgImageLightMode.png');
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     // Assume user check or API call here
-    setStep('otp');
+    if (phoneNumber.trim().length < 10) {
+      alert('Please enter a valid phone number');
+      return;
+    }
+
+    await sendOtp(phoneNumber); // this logs the OTP
+    try {
+      const response =
+        mode === 'signup'
+          ? await signup(phoneNumber, 'user') // assuming 'user' as default role
+          : await login(phoneNumber);
+
+      if (response.success) {
+        setStep('otp');
+      } else {
+        alert(response.message);
+      }
+    } catch (error) {
+      alert('Something went wrong. Please try again.');
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    const enteredOtp = otp.join('');
+    const isValid = await verifyOtp(phoneNumber, enteredOtp);
+
+    if (isValid) {
+      try {
+        const role = await AsyncStorage.getItem('role');
+        if (role === 'Hotelier') {
+          navigation.navigate('HotelierDashboard' as never);
+        } else if (role === 'Traveler') {
+          navigation.navigate('TravellerDashboard' as never);
+        } else if (role === 'Travel Agency') {
+          navigation.navigate('TravelAgencyDashboard' as never);
+        } else if (role === 'Taxi Driver') {
+          navigation.navigate('TaxiDashboard' as never);
+        } else {
+          alert('Unknown role in storage.');
+        }
+      } catch (err) {
+        console.error('Error retrieving role:', err);
+      }
+    } else {
+      alert('Invalid OTP. Please try again.');
+    }
   };
 
   const handleOtpChange = (index: number, value: string) => {
@@ -130,7 +181,9 @@ const AuthScreen = () => {
         Didn’t receive the OTP?{' '}
         <Text style={styles.resendLink}>RESEND OTP</Text>
       </Text>
-      <TouchableOpacity style={[styles.button, {marginTop: 24}]}>
+      <TouchableOpacity
+        style={[styles.button, {marginTop: 24}]}
+        onPress={handleVerifyOtp}>
         <Text style={styles.buttonText}>VERIFY</Text>
       </TouchableOpacity>
     </KeyboardAvoidingView>

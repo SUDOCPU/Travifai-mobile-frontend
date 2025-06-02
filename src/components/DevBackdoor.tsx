@@ -1,13 +1,15 @@
 import {TouchableOpacity, Text, StyleSheet} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
-
+import {clearSession} from '../utils/session';
 const DevBackdoor = () => {
   const navigation = useNavigation();
+  const handleDevbackdoor = () => {
+    clearSession();
+    navigation.navigate('HomeScreen' as never);
+  };
 
   return (
-    <TouchableOpacity
-      onPress={() => navigation.navigate('HomeScreen' as never)}
-      style={styles.backdoorButton}>
+    <TouchableOpacity onPress={handleDevbackdoor} style={styles.backdoorButton}>
       <Text style={styles.backdoorText}>Dev: Home</Text>
     </TouchableOpacity>
   );
