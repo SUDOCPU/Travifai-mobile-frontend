@@ -2,13 +2,12 @@ import React from 'react';
 import {Text} from 'react-native';
 import DevBackdoor from '../../components/DevBackdoor';
 
-const TaxiDashboard = () => {
+const TravelerDashboard = () => {
   return (
     <>
-      <Text>Taxi Dashboard</Text>
+      <Text>Traveler Dashboard</Text>
       <DevBackdoor />
     </>
   );
 };
-
-export default TaxiDashboard;
+export default TravelerDashboard;

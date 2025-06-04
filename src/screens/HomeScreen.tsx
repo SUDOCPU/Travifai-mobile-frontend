@@ -1,4 +1,4 @@
-// src/screens/home/HomeScreen.tsx
+// src/screens/homescreen/HomeScreen.tsx
 import React, {useEffect} from 'react';
 import {
   StyleSheet,
@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {getSession} from '../utils/session';
+import {getAuthData, saveRole} from '../utils/session';
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window');
 
@@ -40,38 +40,30 @@ const HomeScreen = () => {
 
   useEffect(() => {
     const redirectIfLoggedIn = async () => {
-      const {token, role} = await getSession();
+      const {token, role} = await getAuthData();
       if (token && role) {
-        switch (role) {
-          case 'Hotelier':
-            navigation.navigate('HotelierDashboard' as never);
-            break;
-          case 'Traveler':
-            navigation.navigate('TravellerDashboard' as never);
-            break;
-          case 'Travel Agency':
-            navigation.navigate('TravelAgencyDashboard' as never);
-            break;
-          case 'Taxi Driver':
-            navigation.navigate('TaxiDashboard' as never);
-            break;
-          default:
-            break;
-        }
+        navigation.navigate('Dashboard' as never);
       }
     };
 
     redirectIfLoggedIn();
   }, [navigation]);
 
+  useEffect(() => {
+    const checkFirstRun = async () => {
+      const flag = await AsyncStorage.getItem('@travifai_hasPickedRole');
+      if (flag) {
+        navigation.navigate('Auth' as never);
+      }
+    };
+    checkFirstRun();
+  }, [navigation]);
+
   const handleSelect = async (role: string) => {
     try {
-      await AsyncStorage.setItem('role', role);
-      if (role === 'Hotelier') {
-        navigation.navigate('AuthScreen' as never);
-      } else {
-        navigation.navigate('AuthScreen' as never);
-      }
+      await saveRole(role);
+      console.log(role);
+      navigation.navigate('Auth' as never);
     } catch (error) {
       console.error('Error saving role:', error);
     }

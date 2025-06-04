@@ -1,35 +1,57 @@
-import {TouchableOpacity, Text, StyleSheet} from 'react-native';
+// src/components/DevBackdoorButton.tsx
+import React from 'react';
+import {TouchableOpacity, StyleSheet, Text} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Toast from 'react-native-toast-message';
 import {useNavigation} from '@react-navigation/native';
-import {clearSession} from '../utils/session';
+
 const DevBackdoor = () => {
   const navigation = useNavigation();
-  const handleDevbackdoor = () => {
-    clearSession();
-    navigation.navigate('HomeScreen' as never);
+
+  const handleReset = async () => {
+    try {
+      await AsyncStorage.clear();
+      Toast.show({
+        type: 'success',
+        text1: 'App reset successfully',
+      });
+
+      // Navigate back to Splash or Home
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'Splash' as never}],
+      });
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Reset failed',
+        text2: error?.message,
+      });
+    }
   };
 
   return (
-    <TouchableOpacity onPress={handleDevbackdoor} style={styles.backdoorButton}>
-      <Text style={styles.backdoorText}>Dev: Home</Text>
+    <TouchableOpacity style={styles.container} onPress={handleReset}>
+      <Text style={styles.text}>🛠 Reset</Text>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  backdoorButton: {
+  container: {
     position: 'absolute',
-    top: 40,
+    bottom: 30,
     right: 20,
-    backgroundColor: '#00000088',
-    paddingHorizontal: 12,
     paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: '#333',
     borderRadius: 8,
-    zIndex: 999,
+    opacity: 0.6,
   },
-  backdoorText: {
+  text: {
     color: 'white',
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
 });
 

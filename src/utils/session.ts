@@ -1,21 +1,60 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export const getSession = async () => {
-  try {
-    const token = await AsyncStorage.getItem('token');
-    const role = await AsyncStorage.getItem('role');
-    const hasSeenIntro = await AsyncStorage.getItem('hasSeenIntro');
-    return {token, role, hasSeenIntro};
-  } catch (error) {
-    console.error('Error getting session:', error);
-    return {token: null, role: null, hasSeenIntro: null};
-  }
+const TOKEN_KEY = '@travifai_token';
+const ROLE_KEY = '@travifai_role';
+const ROLE_FLAG = '@travifai_hasPickedRole';
+
+export const saveRole = async (role: string) => {
+  await AsyncStorage.multiSet([
+    [ROLE_KEY, role],
+    [ROLE_FLAG, 'true'],
+  ]);
 };
 
-export const clearSession = async () => {
-  try {
-    await AsyncStorage.multiRemove(['token', 'role', 'hasSeenIntro']);
-  } catch (error) {
-    console.error('Error clearing session:', error);
-  }
+export const createSessionToken = async () => {
+  const token =
+    'T-' +
+    Date.now().toString(36) +
+    '-' +
+    Math.random().toString(36).slice(2, 8);
+
+  await AsyncStorage.setItem('@travifai_token', token);
+  return token;
+};
+
+// export const saveAuthData = async (token?: string, role?: string) => {
+//   try {
+//     if (!token || !role) {
+//       console.warn(
+//         `saveAuthData called with missing value: ${token} , ${role}`,
+//       );
+//       return;
+//     }
+//     await AsyncStorage.multiSet([
+//       ['@travifai_token', token],
+//       ['@@travifai_role', role],
+//     ]);
+//   } catch (error) {
+//     console.error('Error Storing auth Data', error);
+//   }
+// };
+
+export const getAuthData = async () => {
+  const [[, token], [, role]] = await AsyncStorage.multiGet([
+    TOKEN_KEY,
+    ROLE_KEY,
+  ]);
+  return {token, role};
+};
+
+export const clearAuthData = async () => {
+  await AsyncStorage.multiRemove([TOKEN_KEY, ROLE_KEY]);
+};
+
+export const devReset = async () => {
+  await AsyncStorage.multiRemove([
+    '@travifai_token',
+    '@travifai_role',
+    '@travifai_hasPickedRole',
+  ]);
 };

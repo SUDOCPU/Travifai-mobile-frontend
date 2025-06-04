@@ -10,27 +10,24 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
-import {getSession} from '../utils/session';
+import {getAuthData} from '../utils/session';
 import type {StackNavigationProp} from '@react-navigation/stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const window = Dimensions.get('window');
 const SCREEN_WIDTH = window.width;
 const SCREEN_HEIGHT = window.height;
 
 type RootStackParamList = {
-  SplashScreen: undefined;
-  HomeScreen: undefined;
-  AuthScreen: undefined;
-  InfoCarousel: undefined;
-  HotelierDashboard: undefined;
-  TravellerDashboard: undefined;
-  TravelAgencyDashboard: undefined;
-  TaxiDashboard: undefined;
+  Splash: undefined;
+  Home: undefined;
+  Auth: undefined;
+  Dashboard: undefined;
 };
 
 type SplashScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
-  'SplashScreen'
+  'Splash'
 >;
 
 const SplashScreen = () => {
@@ -40,32 +37,15 @@ const SplashScreen = () => {
 
   useEffect(() => {
     const initializeApp = async () => {
-      const {token, role, hasSeenIntro} = await getSession();
-
+      const {token, role} = await getAuthData();
+      const firstRun = await AsyncStorage.getItem('@travifai_hasPickedRole');
       setTimeout(() => {
-        if (!role) {
-          navigation.replace('HomeScreen');
-        } else if (token) {
-          switch (role) {
-            case 'Hotelier':
-              navigation.replace('HotelierDashboard');
-              break;
-            case 'Traveler':
-              navigation.replace('TravellerDashboard');
-              break;
-            case 'Travel Agency':
-              navigation.replace('TravelAgencyDashboard');
-              break;
-            case 'Taxi Driver':
-              navigation.replace('TaxiDashboard');
-              break;
-          }
+        if (!firstRun) {
+          navigation.replace('Home');
+        } else if (!token) {
+          navigation.replace('Auth');
         } else {
-          if (role === 'Hotelier' && hasSeenIntro !== 'true') {
-            navigation.replace('InfoCarousel');
-          } else {
-            navigation.replace('AuthScreen');
-          }
+          navigation.replace('Dashboard');
         }
       }, 1500);
     };
@@ -99,7 +79,7 @@ const SplashScreen = () => {
       <TouchableOpacity
         testID="forceSkip"
         style={styles.arrowContainer}
-        onPress={() => navigation.replace('HomeScreen')}>
+        onPress={() => navigation.replace('Home')}>
         <Text style={styles.arrow}>{'>>'}</Text>
       </TouchableOpacity>
     </View>
