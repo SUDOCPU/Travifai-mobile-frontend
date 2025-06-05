@@ -40,7 +40,7 @@ const DashboardStack = () => {
           setStart('TaxiDashboard');
           break;
         default:
-          setStart('TaxiDashboard');
+          setStart('HotelierDashboard');
       }
     })();
   }, []);

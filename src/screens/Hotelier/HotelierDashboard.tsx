@@ -1,13 +1,16 @@
+// src/screens/hotelier/HotelierDashboard.tsx
 import React from 'react';
-import {UserProvider} from '../../context/UserContext';
-import DashboardLayout from '../../components/Hotelier/pages/DashboardLayout';
-import DevBackdoor from '../../components/DevBackdoor';
+import {Provider} from 'react-redux';
+import {PersistGate} from 'redux-persist/integration/react';
+import HotelierTabs from '../../navigation/HotelierTabs';
+import {dashboardStore, persistor} from '../../store/dashboard';
 
 const HotelierDashboard = () => (
-  <UserProvider>
-    <DashboardLayout />
-    <DevBackdoor />
-  </UserProvider>
+  <Provider store={dashboardStore}>
+    <PersistGate loading={null} persistor={persistor}>
+      <HotelierTabs />
+    </PersistGate>
+  </Provider>
 );
 
 export default HotelierDashboard;

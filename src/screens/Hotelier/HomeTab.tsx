@@ -1,14 +1,14 @@
 import {StyleSheet, Text, View} from 'react-native';
 import React from 'react';
 
-const HotelProfile = () => {
+const HomeTab = () => {
   return (
     <View>
-      <Text>HotelProfile</Text>
+      <Text>HomeTab</Text>
     </View>
   );
 };
 
-export default HotelProfile;
+export default HomeTab;
 
 const styles = StyleSheet.create({});
