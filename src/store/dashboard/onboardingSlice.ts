@@ -3,7 +3,17 @@ import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {persistReducer} from 'redux-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-type Tile = 'personal' | 'hotel' | 'room' | 'nearby' | 'security' | 'amenities';
+type Tile =
+  | 'personal'
+  | 'hotel'
+  | 'room'
+  | 'nearby'
+  | 'security'
+  | 'amenities'
+  | 'connectivity'
+  | 'usp'
+  | 'documents'
+  | 'rules';
 
 interface OnboardingState {
   completed: Record<Tile, boolean>;
@@ -15,9 +25,11 @@ const initialState: OnboardingState = {
     personal: false,
     hotel: false,
     room: false,
-    nearby: false,
-    security: false,
+    connectivity: false,
+    usp: false,
     amenities: false,
+    documents: false,
+    rules: false,
   },
   data: {},
 };
